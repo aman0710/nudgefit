@@ -1,0 +1,25 @@
+# Environment secrets
+.env
+
+# Maven build output
+target/
+
+# Compiled Java classes
+*.class
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Log files
+*.log
+
+# Project specific
+nudgefit_blueprint.md
+.env.example
