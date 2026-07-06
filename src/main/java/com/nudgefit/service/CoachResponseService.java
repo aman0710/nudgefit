@@ -57,9 +57,9 @@ public class CoachResponseService {
             variables.put("carbs_consumed", "0");
             variables.put("fats_consumed", "0");
             
-            variables.put("target_protein_g", String.valueOf(dailyLog.getTargetProteinG()));
-            variables.put("target_carbs_g", String.valueOf(dailyLog.getTargetCarbsG()));
-            variables.put("target_fat_g", String.valueOf(dailyLog.getTargetFatG()));
+            variables.put("target_protein_g", String.valueOf(user.getDailyProteinTargetG()));
+            variables.put("target_carbs_g", String.valueOf(user.getDailyCarbsTargetG()));
+            variables.put("target_fat_g", String.valueOf(user.getDailyFatTargetG()));
         } else {
             variables.put("calories_consumed", "0");
             variables.put("calories_burned", "0");

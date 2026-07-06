@@ -79,9 +79,6 @@ public class FoodLoggingService {
                 .totalCaloriesBurned(BigDecimal.ZERO)
                 .netCalories(BigDecimal.ZERO)
                 .targetCalories(user.getDailyCalorieTarget())
-                .targetProteinG(user.getDailyProteinTargetG())
-                .targetCarbsG(user.getDailyCarbsTargetG())
-                .targetFatG(user.getDailyFatTargetG())
                 .build();
         return dailyLogRepository.save(log);
     }

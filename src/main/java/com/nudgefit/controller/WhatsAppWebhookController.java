@@ -1,10 +1,14 @@
 package com.nudgefit.controller;
 
-import com.nudgefit.service.MessageProcessorService;
+import com.nudgefit.model.dto.MessageReceivedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/webhook")
@@ -12,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class WhatsAppWebhookController {
 
-    private final MessageProcessorService messageProcessorService;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * Twilio sends POST with application/x-www-form-urlencoded.
@@ -32,8 +36,8 @@ public class WhatsAppWebhookController {
 
         log.info("Received WhatsApp message from {} (sid: {}): {}", phoneNumber, messageSid, body);
 
-        // Process message asynchronously — this method returns immediately
-        messageProcessorService.processMessageAsync(phoneNumber, body, messageSid);
+        // Publish event to be processed asynchronously
+        eventPublisher.publishEvent(new MessageReceivedEvent(phoneNumber, body));
 
         // Return empty TwiML response to Twilio (we'll reply via the API separately)
         return "<Response></Response>";
