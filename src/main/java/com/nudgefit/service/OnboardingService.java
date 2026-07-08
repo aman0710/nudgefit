@@ -99,49 +99,47 @@ public class OnboardingService {
             int age = Integer.parseInt(message.trim());
             user.setAge(age);
             user.setConversationState(ConversationState.ONBOARDING_GENDER);
-            return "Gender? (Male/Female)";
+            return "What is your biological sex?\n1. Male\n2. Female\nReply with 1 or 2.";
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Please enter a valid age (e.g., 27).");
         }
     }
 
     private String handleGender(User user, String message) {
-        String input = message.trim().toUpperCase();
-        if (input.startsWith("M")) {
+        String input = message.trim();
+        if (input.equals("1")) {
             user.setGender(Gender.MALE);
-        } else if (input.startsWith("F")) {
+        } else if (input.equals("2")) {
             user.setGender(Gender.FEMALE);
         } else {
-            throw new IllegalArgumentException("Please reply with Male or Female.");
+            throw new IllegalArgumentException("Please reply with 1 or 2.");
         }
         user.setConversationState(ConversationState.ONBOARDING_ACTIVITY_LEVEL);
-        return "How active are you?\n1. Sedentary (desk job)\n2. Lightly active (1-2 days/week)\n3. Moderately active (3-5 days/week)\n4. Very active (6-7 days/week)\nReply with 1, 2, 3, or 4.";
+        return "Outside of your workouts, how active is your daily lifestyle? (Think about your job and daily movement):\n1. Sedentary (Mostly sitting, e.g., desk job, driving)\n2. Lightly Active (Lots of standing or walking, e.g., teacher, retail)\n3. Highly Active (Physically demanding job, e.g., construction)\nReply with 1, 2, or 3.";
     }
 
     private String handleActivityLevel(User user, String message) {
         String input = message.trim();
-        if (input.contains("1") || input.toLowerCase().contains("sedentary")) {
+        if (input.equals("1")) {
             user.setActivityLevel(ActivityLevel.SEDENTARY);
-        } else if (input.contains("2") || input.toLowerCase().contains("lightly")) {
+        } else if (input.equals("2")) {
             user.setActivityLevel(ActivityLevel.LIGHTLY_ACTIVE);
-        } else if (input.contains("3") || input.toLowerCase().contains("moderately")) {
-            user.setActivityLevel(ActivityLevel.MODERATELY_ACTIVE);
-        } else if (input.contains("4") || input.toLowerCase().contains("very")) {
+        } else if (input.equals("3")) {
             user.setActivityLevel(ActivityLevel.VERY_ACTIVE);
         } else {
-            throw new IllegalArgumentException("Please reply with 1, 2, 3, or 4 for your activity level.");
+            throw new IllegalArgumentException("Please reply with 1, 2, or 3.");
         }
         
         user.setConversationState(ConversationState.ONBOARDING_FAT_GOAL);
-        return "Awesome! Let's talk body fat goals. Do you want to LOSE, MAINTAIN, or GAIN body fat?";
+        return "Awesome! What is your primary goal for body fat?\n1. Lose fat\n2. Maintain fat\n3. Gain fat\nReply with 1, 2, or 3.";
     }
 
     private String handleFatGoal(User user, String message) {
-        String input = message.trim().toUpperCase();
-        if (input.contains("LOSE")) user.setFatGoal(FatGoal.LOSE);
-        else if (input.contains("MAINTAIN")) user.setFatGoal(FatGoal.MAINTAIN);
-        else if (input.contains("GAIN")) user.setFatGoal(FatGoal.GAIN);
-        else throw new IllegalArgumentException("Please reply with LOSE, MAINTAIN, or GAIN.");
+        String input = message.trim();
+        if (input.equals("1")) user.setFatGoal(FatGoal.LOSE);
+        else if (input.equals("2")) user.setFatGoal(FatGoal.MAINTAIN);
+        else if (input.equals("3")) user.setFatGoal(FatGoal.GAIN);
+        else throw new IllegalArgumentException("Please reply with 1, 2, or 3.");
 
         user.setConversationState(ConversationState.ONBOARDING_CURRENT_BODY_FAT);
         return "Got it. Roughly, what is your current body fat percentage? (If you don't know, take a guess, e.g., 20).";
@@ -155,7 +153,7 @@ public class OnboardingService {
             if (user.getFatGoal() == FatGoal.MAINTAIN) {
                 user.setTargetBodyFatPct(bodyFat);
                 user.setConversationState(ConversationState.ONBOARDING_MUSCLE_GOAL);
-                return "Since you want to maintain, we will keep it at " + bodyFat + "%. Now, what about muscle? Do you want to LOSE, MAINTAIN, or GAIN muscle mass?";
+                return "Since you want to maintain, we will keep it at " + bodyFat + "%. What is your primary goal for muscle mass?\n1. Lose muscle\n2. Maintain muscle\n3. Gain muscle\nReply with 1, 2, or 3.";
             } else {
                 user.setConversationState(ConversationState.ONBOARDING_TARGET_BODY_FAT);
                 return "And what is your target body fat percentage?";
@@ -178,18 +176,18 @@ public class OnboardingService {
             
             user.setTargetBodyFatPct(targetBodyFat);
             user.setConversationState(ConversationState.ONBOARDING_MUSCLE_GOAL);
-            return "Great. Now what about muscle? Do you want to LOSE, MAINTAIN, or GAIN muscle mass?";
+            return "Great. What is your primary goal for muscle mass?\n1. Lose muscle\n2. Maintain muscle\n3. Gain muscle\nReply with 1, 2, or 3.";
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Please enter a valid number for target body fat percentage.");
         }
     }
 
     private String handleMuscleGoal(User user, String message) {
-        String input = message.trim().toUpperCase();
-        if (input.contains("LOSE")) user.setMuscleGoal(MuscleGoal.LOSE);
-        else if (input.contains("MAINTAIN")) user.setMuscleGoal(MuscleGoal.MAINTAIN);
-        else if (input.contains("GAIN")) user.setMuscleGoal(MuscleGoal.GAIN);
-        else throw new IllegalArgumentException("Please reply with LOSE, MAINTAIN, or GAIN.");
+        String input = message.trim();
+        if (input.equals("1")) user.setMuscleGoal(MuscleGoal.LOSE);
+        else if (input.equals("2")) user.setMuscleGoal(MuscleGoal.MAINTAIN);
+        else if (input.equals("3")) user.setMuscleGoal(MuscleGoal.GAIN);
+        else throw new IllegalArgumentException("Please reply with 1, 2, or 3.");
 
         user.setConversationState(ConversationState.ONBOARDING_CURRENT_MUSCLE_MASS);
         return "Roughly, what is your current skeletal muscle mass in kg? (Guess if you aren't sure, e.g., 35).";
@@ -203,7 +201,7 @@ public class OnboardingService {
             if (user.getMuscleGoal() == MuscleGoal.MAINTAIN) {
                 user.setTargetMuscleMassKg(muscleMass);
                 user.setConversationState(ConversationState.ONBOARDING_INTENSITY_LEVEL);
-                return "Since you want to maintain, we will target " + muscleMass + "kg. Finally, what intensity of change do you want? (GRADUAL, BALANCED, or AGGRESSIVE)";
+                return "Since you want to maintain, we will target " + muscleMass + "kg. Finally, what pace of change are you aiming for?\n1. Gradual (Slower, highly sustainable)\n2. Balanced (Steady pace, moderate effort)\n3. Aggressive (Fast pace, requires strict discipline)\nReply with 1, 2, or 3.";
             } else {
                 user.setConversationState(ConversationState.ONBOARDING_TARGET_MUSCLE_MASS);
                 return "And what is your target muscle mass in kg?";
@@ -226,18 +224,18 @@ public class OnboardingService {
             
             user.setTargetMuscleMassKg(targetMuscleMass);
             user.setConversationState(ConversationState.ONBOARDING_INTENSITY_LEVEL);
-            return "Finally, what intensity of change do you want? (GRADUAL, BALANCED, or AGGRESSIVE)";
+            return "Finally, what pace of change are you aiming for?\n1. Gradual (Slower, highly sustainable)\n2. Balanced (Steady pace, moderate effort)\n3. Aggressive (Fast pace, requires strict discipline)\nReply with 1, 2, or 3.";
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Please enter a valid number for target muscle mass in kg.");
         }
     }
 
     private String handleIntensityLevel(User user, String message) {
-        String input = message.trim().toUpperCase();
-        if (input.contains("GRADUAL")) user.setIntensityLevel(IntensityLevel.GRADUAL);
-        else if (input.contains("BALANCED")) user.setIntensityLevel(IntensityLevel.BALANCED);
-        else if (input.contains("AGGRESSIVE")) user.setIntensityLevel(IntensityLevel.AGGRESSIVE);
-        else throw new IllegalArgumentException("Please reply with GRADUAL, BALANCED, or AGGRESSIVE.");
+        String input = message.trim();
+        if (input.equals("1")) user.setIntensityLevel(IntensityLevel.GRADUAL);
+        else if (input.equals("2")) user.setIntensityLevel(IntensityLevel.BALANCED);
+        else if (input.equals("3")) user.setIntensityLevel(IntensityLevel.AGGRESSIVE);
+        else throw new IllegalArgumentException("Please reply with 1, 2, or 3.");
 
         // Finish onboarding: calculate macros!
         BigDecimal bmr = MacroCalculator.calculateBmr(user.getCurrentWeightKg(), user.getHeightCm(), user.getAge(), user.getGender());

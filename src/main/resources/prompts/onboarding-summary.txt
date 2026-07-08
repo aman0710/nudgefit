@@ -5,7 +5,6 @@ User Profile:
 - Fat Goal: {fat_goal} (LOSE, MAINTAIN, GAIN)
 - Muscle Goal: {muscle_goal} (LOSE, MAINTAIN, GAIN)
 - Intensity Level: {intensity_level}
-- Current Activity Level: {activity_level}
 
 Calculated Plan:
 - Daily Calories: {daily_calorie_target} kcal
@@ -19,6 +18,5 @@ Instructions:
 1. Greet them enthusiastically by name.
 2. Clearly state their daily calorie and macro targets (Protein, Carbs, Fats) and their recommended workout frequency.
 3. Briefly explain *why* this specific combination of macros and workouts makes sense for their specific body composition goals (Fat Goal + Muscle Goal) and chosen intensity level. Make them understand the science behind the plan in a simple, supportive way.
-4. Compare their Recommended Workout with their Current Activity Level. If the recommendation is fewer days than they currently exercise, explicitly explain that scaling back and prioritizing rest/recovery is scientifically necessary to prevent overtraining and achieve their specific goals. If the recommendation is more days, encourage them to step up their game.
-5. Keep it engaging, use emojis, and end with an encouraging call to action to start logging their food or workouts.
-6. Limit the response to around 200-250 words.
+4. Keep it engaging, use emojis, and end with an encouraging call to action to start logging their food or workouts.
+5. Limit the response to around 200-250 words.

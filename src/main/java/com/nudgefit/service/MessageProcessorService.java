@@ -74,6 +74,9 @@ public class MessageProcessorService {
             // Add bot message to context
             contextService.addMessage(phoneNumber, "assistant", responseText);
 
+        } catch (IllegalArgumentException e) {
+            log.warn("Validation error for {}: {}", phoneNumber, e.getMessage());
+            messagingService.sendMessage(phoneNumber, e.getMessage());
         } catch (Exception e) {
             log.error("Error processing message for {}: {}", phoneNumber, e.getMessage(), e);
             messagingService.sendMessage(phoneNumber, "I'm having a bit of trouble right now. Can you try again in a minute? 🙏");
