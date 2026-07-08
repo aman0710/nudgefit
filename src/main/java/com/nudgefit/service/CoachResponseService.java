@@ -77,7 +77,7 @@ public class CoachResponseService {
         variables.put("user_message", userMessage);
         variables.put("conversation_history", conversationHistory);
 
-        String prompt = promptBuilder.buildPrompt("coaching-response.txt", variables);
+        String prompt = promptBuilder.build("coaching-response.txt", variables);
 
         try {
             String response = geminiAiService.callForText(prompt);

@@ -24,7 +24,7 @@ public class IntentClassifierService {
         List<String> recentMessages = contextService.getRecentMessages(phoneNumber, 5);
         String conversationHistory = String.join("\n", recentMessages);
 
-        String prompt = promptBuilder.buildPrompt("intent-classification.txt", Map.of(
+        String prompt = promptBuilder.build("intent-classification.txt", Map.of(
                 "user_message", userMessage,
                 "conversation_history", conversationHistory
         ));

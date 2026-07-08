@@ -10,6 +10,7 @@ import com.nudgefit.repository.DailyLogRepository;
 import com.nudgefit.repository.WorkoutEntryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.nudgefit.model.enums.WorkoutType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +33,7 @@ public class WorkoutLoggingService {
 
     @Transactional
     public String logWorkout(User user, String userMessage) {
-        String prompt = promptBuilder.buildPrompt("workout-parsing.txt", Map.of(
+        String prompt = promptBuilder.build("workout-parsing.txt", Map.of(
                 "user_message", userMessage,
                 "current_weight", String.valueOf(user.getCurrentWeightKg())
         ));
@@ -50,7 +51,7 @@ public class WorkoutLoggingService {
                 .dailyLogId(dailyLog.getId())
                 .userId(user.getId())
                 .rawUserInput(userMessage)
-                .workoutType(response.workout_type() != null ? response.workout_type().name() : "CARDIO")
+                .workoutType(response.workout_type() != null ? response.workout_type() : WorkoutType.CARDIO)
                 .durationMinutes(response.duration_minutes())
                 .caloriesBurned(response.calories_burned())
                 .loggedAt(LocalDateTime.now())
@@ -77,9 +78,6 @@ public class WorkoutLoggingService {
                 .totalCaloriesBurned(BigDecimal.ZERO)
                 .netCalories(BigDecimal.ZERO)
                 .targetCalories(user.getDailyCalorieTarget())
-                .targetProteinG(user.getDailyProteinTargetG())
-                .targetCarbsG(user.getDailyCarbsTargetG())
-                .targetFatG(user.getDailyFatTargetG())
                 .build();
         return dailyLogRepository.save(log);
     }

@@ -10,6 +10,7 @@ import com.nudgefit.repository.DailyLogRepository;
 import com.nudgefit.repository.FoodEntryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.nudgefit.model.enums.MealType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +33,7 @@ public class FoodLoggingService {
 
     @Transactional
     public String logFood(User user, String userMessage) {
-        String prompt = promptBuilder.buildPrompt("food-parsing.txt", Map.of(
+        String prompt = promptBuilder.build("food-parsing.txt", Map.of(
                 "user_message", userMessage,
                 "current_weight", String.valueOf(user.getCurrentWeightKg())
         ));
@@ -54,7 +55,7 @@ public class FoodLoggingService {
                 .proteinG(response.total_protein_g())
                 .carbsG(response.total_carbs_g())
                 .fatG(response.total_fat_g())
-                .mealType(response.meal_type() != null ? response.meal_type().name() : "SNACK")
+                .mealType(response.meal_type() != null ? response.meal_type() : MealType.SNACK)
                 .loggedAt(LocalDateTime.now())
                 // .parsedItems(serialize items to JSON if needed)
                 .build();
