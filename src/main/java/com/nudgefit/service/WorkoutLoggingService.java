@@ -67,7 +67,7 @@ public class WorkoutLoggingService {
 
         goalEngineService.recalculateGoalAndSnapshot(user, dailyLog);
 
-        return coachResponseService.generateCoachingResponse(user, userMessage, dailyLog);
+        return coachResponseService.generateCoachingResponse(user, userMessage, dailyLog, null);
     }
 
     private DailyLog createNewDailyLog(User user) {
@@ -77,6 +77,9 @@ public class WorkoutLoggingService {
                 .totalCaloriesConsumed(BigDecimal.ZERO)
                 .totalCaloriesBurned(BigDecimal.ZERO)
                 .netCalories(BigDecimal.ZERO)
+                .totalProteinConsumed(BigDecimal.ZERO)
+                .totalCarbsConsumed(BigDecimal.ZERO)
+                .totalFatConsumed(BigDecimal.ZERO)
                 .targetCalories(user.getDailyCalorieTarget())
                 .build();
         return dailyLogRepository.save(log);

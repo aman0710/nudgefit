@@ -34,7 +34,7 @@ spring:
       port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
       ssl:
-        enabled: true
+        enabled: false
       timeout: 5000ms
 
 # Twilio

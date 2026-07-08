@@ -4,12 +4,17 @@ import com.nudgefit.model.entity.User;
 import com.nudgefit.model.enums.*;
 import com.nudgefit.repository.UserRepository;
 import com.nudgefit.util.MacroCalculator;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import com.nudgefit.ai.GeminiAiService;
+import com.nudgefit.ai.PromptBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +23,8 @@ public class OnboardingService {
 
     private final UserRepository userRepository;
     private final ConversationContextService contextService;
+    private final GeminiAiService geminiAiService;
+    private final PromptBuilder promptBuilder;
 
     @Transactional
     public String handleOnboarding(User user, String message) {
@@ -254,12 +261,38 @@ public class OnboardingService {
             user.getCurrentMuscleMassKg(), user.getTargetMuscleMassKg(),
             user.getFatGoal(), user.getMuscleGoal(), user.getIntensityLevel()
         );
+        
+        String workoutRec = MacroCalculator.calculateWorkoutRecommendations(user.getIntensityLevel(), user.getMuscleGoal(), user.getFatGoal());
+
+        Map<String, String> vars = new HashMap<>();
+        vars.put("user_name", user.getName());
+        vars.put("daily_calorie_target", dailyCalorieTarget.toString());
+        vars.put("protein_target", proteinTarget.toString());
+        vars.put("carbs_target", carbsTarget.toString());
+        vars.put("fat_target", fatTarget.toString());
+        vars.put("estimated_days", String.valueOf(estimatedDays));
+        vars.put("fat_goal", user.getFatGoal().name());
+        vars.put("muscle_goal", user.getMuscleGoal().name());
+        vars.put("intensity_level", user.getIntensityLevel().name());
+        vars.put("activity_level", user.getActivityLevel().name());
+        vars.put("workout_recommendation", workoutRec);
+
+        String prompt = promptBuilder.build("onboarding-summary.txt", vars);
+        try {
+            String aiSummary = geminiAiService.callForText(prompt);
+            if (aiSummary != null && !aiSummary.isBlank()) {
+                return aiSummary;
+            }
+        } catch (Exception e) {
+            log.error("Failed to generate AI onboarding summary", e);
+        }
 
         return "🎉 You're all set! Based on your goals:\n" +
                "🔥 Daily Calories: " + dailyCalorieTarget + " kcal\n" +
                "🥩 Protein: " + proteinTarget + "g\n" +
                "🍚 Carbs: " + carbsTarget + "g\n" +
                "🥑 Fats: " + fatTarget + "g\n\n" +
+               "Recommended Workout: " + workoutRec + ".\n" +
                "Estimated timeline to goal: " + estimatedDays + " days.\n" +
                "Start logging your food and workouts by just texting me what you did!";
     }

@@ -63,8 +63,8 @@ public class MessageProcessorService {
                 responseText = switch (classification.intent()) {
                     case FOOD_LOG -> foodLoggingService.logFood(user, messageBody);
                     case WORKOUT_LOG -> workoutLoggingService.logWorkout(user, messageBody);
-                    case PROGRESS_CHECK -> coachResponseService.generateCoachingResponse(user, messageBody, null); // Provide stats
-                    default -> coachResponseService.generateCoachingResponse(user, messageBody, null); // General chat
+                    case PROGRESS_CHECK -> coachResponseService.generateCoachingResponse(user, messageBody, null, null); // Provide stats
+                    default -> coachResponseService.generateCoachingResponse(user, messageBody, null, null); // General chat
                 };
             }
 

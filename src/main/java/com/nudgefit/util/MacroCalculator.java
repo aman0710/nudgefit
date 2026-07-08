@@ -204,4 +204,36 @@ public final class MacroCalculator {
             case VERY_ACTIVE -> new BigDecimal("1.725");
         };
     }
+
+    /**
+     * Calculates recommended workout frequency based on Intensity, Muscle Goal, and Fat Goal.
+     */
+    public static String calculateWorkoutRecommendations(IntensityLevel intensityLevel, MuscleGoal muscleGoal, FatGoal fatGoal) {
+        int strengthDays = 0;
+        int cardioDays = 0;
+
+        if (fatGoal == FatGoal.LOSE && muscleGoal == MuscleGoal.GAIN) {
+            // Recomp: high strength, moderate cardio
+            strengthDays = switch (intensityLevel) { case GRADUAL -> 3; case BALANCED -> 4; case AGGRESSIVE -> 5; };
+            cardioDays = switch (intensityLevel) { case GRADUAL -> 2; case BALANCED -> 3; case AGGRESSIVE -> 3; };
+        } else if (fatGoal == FatGoal.LOSE) {
+            // Pure fat loss: moderate strength, high cardio
+            strengthDays = switch (intensityLevel) { case GRADUAL -> 2; case BALANCED -> 3; case AGGRESSIVE -> 3; };
+            cardioDays = switch (intensityLevel) { case GRADUAL -> 3; case BALANCED -> 4; case AGGRESSIVE -> 5; };
+        } else if (muscleGoal == MuscleGoal.GAIN && fatGoal != FatGoal.LOSE) {
+            // Lean bulk / bulk: high strength, no cardio to preserve calories
+            strengthDays = switch (intensityLevel) { case GRADUAL -> 3; case BALANCED -> 4; case AGGRESSIVE -> 5; };
+            cardioDays = 0;
+        } else if (fatGoal == FatGoal.GAIN) {
+            // Just gaining weight/fat: low strength, no cardio
+            strengthDays = switch (intensityLevel) { case GRADUAL -> 2; case BALANCED -> 2; case AGGRESSIVE -> 3; };
+            cardioDays = 0;
+        } else {
+            // MAINTAIN both: balanced strength, no cardio
+            strengthDays = switch (intensityLevel) { case GRADUAL -> 2; case BALANCED -> 3; case AGGRESSIVE -> 4; };
+            cardioDays = 0;
+        }
+        
+        return strengthDays + " days of strength training and " + cardioDays + " days of cardio per week";
+    }
 }

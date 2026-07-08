@@ -1,6 +1,6 @@
 package com.nudgefit.model.entity;
 
-import com.nudgefit.model.enums.Compliance;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,12 +44,20 @@ public class DailyLog {
     @Builder.Default
     private BigDecimal netCalories = BigDecimal.ZERO;
 
+    @Column(name = "total_protein_consumed", precision = 7, scale = 2)
+    @Builder.Default
+    private BigDecimal totalProteinConsumed = BigDecimal.ZERO;
+
+    @Column(name = "total_carbs_consumed", precision = 7, scale = 2)
+    @Builder.Default
+    private BigDecimal totalCarbsConsumed = BigDecimal.ZERO;
+
+    @Column(name = "total_fat_consumed", precision = 7, scale = 2)
+    @Builder.Default
+    private BigDecimal totalFatConsumed = BigDecimal.ZERO;
+
     @Column(name = "target_calories", precision = 7, scale = 2)
     private BigDecimal targetCalories;
-
-    @Enumerated(EnumType.STRING)
-    @Column(length = 20)
-    private Compliance compliance;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

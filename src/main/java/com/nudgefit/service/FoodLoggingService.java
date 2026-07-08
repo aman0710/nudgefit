@@ -64,12 +64,15 @@ public class FoodLoggingService {
 
         // Update DailyLog
         dailyLog.setTotalCaloriesConsumed(dailyLog.getTotalCaloriesConsumed().add(response.total_calories() != null ? response.total_calories() : BigDecimal.ZERO));
+        dailyLog.setTotalProteinConsumed(dailyLog.getTotalProteinConsumed().add(response.total_protein_g() != null ? response.total_protein_g() : BigDecimal.ZERO));
+        dailyLog.setTotalCarbsConsumed(dailyLog.getTotalCarbsConsumed().add(response.total_carbs_g() != null ? response.total_carbs_g() : BigDecimal.ZERO));
+        dailyLog.setTotalFatConsumed(dailyLog.getTotalFatConsumed().add(response.total_fat_g() != null ? response.total_fat_g() : BigDecimal.ZERO));
         dailyLog.setNetCalories(dailyLog.getTotalCaloriesConsumed().subtract(dailyLog.getTotalCaloriesBurned()));
         dailyLogRepository.save(dailyLog);
 
         goalEngineService.recalculateGoalAndSnapshot(user, dailyLog);
 
-        return coachResponseService.generateCoachingResponse(user, userMessage, dailyLog);
+        return coachResponseService.generateCoachingResponse(user, userMessage, dailyLog, entry);
     }
 
     private DailyLog createNewDailyLog(User user) {
@@ -79,6 +82,9 @@ public class FoodLoggingService {
                 .totalCaloriesConsumed(BigDecimal.ZERO)
                 .totalCaloriesBurned(BigDecimal.ZERO)
                 .netCalories(BigDecimal.ZERO)
+                .totalProteinConsumed(BigDecimal.ZERO)
+                .totalCarbsConsumed(BigDecimal.ZERO)
+                .totalFatConsumed(BigDecimal.ZERO)
                 .targetCalories(user.getDailyCalorieTarget())
                 .build();
         return dailyLogRepository.save(log);

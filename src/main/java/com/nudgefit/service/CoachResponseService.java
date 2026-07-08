@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
+import com.nudgefit.model.entity.FoodEntry;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -23,7 +25,7 @@ public class CoachResponseService {
     private final PromptBuilder promptBuilder;
     private final ConversationContextService contextService;
 
-    public String generateCoachingResponse(User user, String userMessage, DailyLog dailyLog) {
+    public String generateCoachingResponse(User user, String userMessage, DailyLog dailyLog, FoodEntry currentFoodEntry) {
         // Fetch context
         List<String> recentMessages = contextService.getRecentMessages(user.getPhoneNumber(), 5);
         String conversationHistory = String.join("\n", recentMessages);
@@ -45,6 +47,10 @@ public class CoachResponseService {
         variables.put("current_muscle_mass_kg", String.valueOf(user.getCurrentMuscleMassKg()));
         variables.put("target_muscle_mass_kg", String.valueOf(user.getTargetMuscleMassKg()));
         
+        // Workout Recommendation
+        String workoutRec = MacroCalculator.calculateWorkoutRecommendations(user.getIntensityLevel(), user.getMuscleGoal(), user.getFatGoal());
+        variables.put("workout_recommendation", workoutRec);
+
         // Log variables
         if (dailyLog != null) {
             variables.put("calories_consumed", String.valueOf(dailyLog.getTotalCaloriesConsumed()));
@@ -52,10 +58,9 @@ public class CoachResponseService {
             variables.put("net_calories", String.valueOf(dailyLog.getNetCalories()));
             variables.put("target_calories", String.valueOf(dailyLog.getTargetCalories()));
             
-            // Assume we add logic for macro tracking on DailyLog later or keep basic here
-            variables.put("protein_consumed", "0"); // Placeholder until DailyLog macro tracking is fully connected
-            variables.put("carbs_consumed", "0");
-            variables.put("fats_consumed", "0");
+            variables.put("protein_consumed", String.valueOf(dailyLog.getTotalProteinConsumed()));
+            variables.put("carbs_consumed", String.valueOf(dailyLog.getTotalCarbsConsumed()));
+            variables.put("fats_consumed", String.valueOf(dailyLog.getTotalFatConsumed()));
             
             variables.put("target_protein_g", String.valueOf(user.getDailyProteinTargetG()));
             variables.put("target_carbs_g", String.valueOf(user.getDailyCarbsTargetG()));
@@ -71,6 +76,17 @@ public class CoachResponseService {
             variables.put("target_protein_g", String.valueOf(user.getDailyProteinTargetG()));
             variables.put("target_carbs_g", String.valueOf(user.getDailyCarbsTargetG()));
             variables.put("target_fat_g", String.valueOf(user.getDailyFatTargetG()));
+        }
+
+        if (currentFoodEntry != null) {
+            String mealMacros = String.format("Calories: %s, Protein: %sg, Carbs: %sg, Fat: %sg",
+                    currentFoodEntry.getTotalCalories(),
+                    currentFoodEntry.getProteinG(),
+                    currentFoodEntry.getCarbsG(),
+                    currentFoodEntry.getFatG());
+            variables.put("current_meal_macros", mealMacros);
+        } else {
+            variables.put("current_meal_macros", "N/A");
         }
 
         variables.put("on_track_days", "5"); // Mocked for now
