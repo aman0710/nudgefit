@@ -199,9 +199,8 @@ public final class MacroCalculator {
     private static BigDecimal getActivityMultiplier(ActivityLevel level) {
         return switch (level) {
             case SEDENTARY -> new BigDecimal("1.2");
-            case LIGHTLY_ACTIVE -> new BigDecimal("1.375");
-            case MODERATELY_ACTIVE -> new BigDecimal("1.55");
-            case VERY_ACTIVE -> new BigDecimal("1.725");
+            case MODERATE -> new BigDecimal("1.375");
+            case ACTIVE -> new BigDecimal("1.725");
         };
     }
 

@@ -11,8 +11,9 @@ Whether your goal is to lose fat, build muscle, or completely recompose your bod
 Using NudgeFit feels just like texting a personal trainer. There's no app to download; it's just a contact on your phone.
 
 ### 1. The Onboarding (Setting Your Goals)
-When you send your first message to NudgeFit, it will ask you a series of quick questions to understand your body and goals:
-- **Basic Stats**: Height, weight, age, gender, and activity level.
+When you send your first message to NudgeFit, it will ask you a series of quick questions to understand your body and goals. Simply reply with the corresponding number (1, 2, 3) to fly through setup:
+- **Basic Stats**: Height, weight, age, and biological sex.
+- **Daily Lifestyle**: What is your baseline activity level outside of workouts (Sedentary, Moderate, Active)?
 - **Body Composition Goals**: Do you want to *lose*, *maintain*, or *gain* fat and muscle?
 - **Intensity**: Do you want to take a *gradual*, *balanced*, or *aggressive* approach to your goal?
 
@@ -63,6 +64,7 @@ NudgeFit is built on a modern Java Spring Boot backend, utilizing PostgreSQL, Re
 4. **Logging Services**: Gemini extracts the exact macros/calories and saves them to the PostgreSQL database.
 5. **GoalEngineService**: Recalculates the user's estimated timeline to reach their body composition goals based on their daily compliance.
 6. **CoachResponseService**: Gemini crafts a personalized, contextual reply which is sent back via Twilio.
+7. **Health/Uptime**: A lightweight `/health` endpoint keeps the service awake on free-tier hosting platforms (like Render) via services like UptimeRobot.
 
 ### Local Installation
 

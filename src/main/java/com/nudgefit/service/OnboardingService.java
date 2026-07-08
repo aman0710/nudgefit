@@ -115,7 +115,7 @@ public class OnboardingService {
             throw new IllegalArgumentException("Please reply with 1 or 2.");
         }
         user.setConversationState(ConversationState.ONBOARDING_ACTIVITY_LEVEL);
-        return "Outside of your workouts, how active is your daily lifestyle? (Think about your job and daily movement):\n1. Sedentary (Mostly sitting, e.g., desk job, driving)\n2. Lightly Active (Lots of standing or walking, e.g., teacher, retail)\n3. Highly Active (Physically demanding job, e.g., construction)\nReply with 1, 2, or 3.";
+        return "Outside of your workouts, how active is your daily lifestyle? (Think about your job and daily movement):\n1. Sedentary (Mostly sitting, e.g., desk job, driving)\n2. Moderate (Lots of standing or walking, e.g., teacher, retail)\n3. Active (Physically demanding job, e.g., construction)\nReply with 1, 2, or 3.";
     }
 
     private String handleActivityLevel(User user, String message) {
@@ -123,9 +123,9 @@ public class OnboardingService {
         if (input.equals("1")) {
             user.setActivityLevel(ActivityLevel.SEDENTARY);
         } else if (input.equals("2")) {
-            user.setActivityLevel(ActivityLevel.LIGHTLY_ACTIVE);
+            user.setActivityLevel(ActivityLevel.MODERATE);
         } else if (input.equals("3")) {
-            user.setActivityLevel(ActivityLevel.VERY_ACTIVE);
+            user.setActivityLevel(ActivityLevel.ACTIVE);
         } else {
             throw new IllegalArgumentException("Please reply with 1, 2, or 3.");
         }
