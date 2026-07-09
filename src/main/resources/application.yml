@@ -2,6 +2,11 @@ spring:
   application:
     name: nudgefit
 
+  # Virtual Threads
+  threads:
+    virtual:
+      enabled: true
+
   # PostgreSQL (Neon)
   datasource:
     url: ${DB_URL}

@@ -153,47 +153,54 @@ public final class MacroCalculator {
             MuscleGoal muscleGoal,
             IntensityLevel intensityLevel) {
 
-        BigDecimal dailyDeficit = BigDecimal.ZERO;
-        BigDecimal dailySurplus = BigDecimal.ZERO;
-
-        if (fatGoal == FatGoal.LOSE) {
-            dailyDeficit = switch (intensityLevel) {
-                case GRADUAL -> new BigDecimal("250");
-                case BALANCED -> new BigDecimal("500");
-                case AGGRESSIVE -> new BigDecimal("750");
-            };
-        }
-        
-        if (muscleGoal == MuscleGoal.GAIN) {
-            dailySurplus = switch (intensityLevel) {
-                case GRADUAL -> new BigDecimal("150");
-                case BALANCED -> new BigDecimal("300");
-                case AGGRESSIVE -> new BigDecimal("500");
-            };
-        }
-
         int daysForFat = 0;
         int daysForMuscle = 0;
 
-        // Fat Loss calculation
+        // Fat Loss calculation (based on realistic weekly body fat % drop)
         if (fatGoal == FatGoal.LOSE && currentBodyFatPct != null && targetBodyFatPct != null && currentBodyFatPct.compareTo(targetBodyFatPct) > 0) {
-            BigDecimal pctDiff = currentBodyFatPct.subtract(targetBodyFatPct).divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
-            BigDecimal fatToLoseKg = currentWeightKg.multiply(pctDiff);
-            BigDecimal totalCalorieDeficit = fatToLoseKg.multiply(new BigDecimal("7700"));
-            if (dailyDeficit.compareTo(BigDecimal.ZERO) > 0) {
-                daysForFat = totalCalorieDeficit.divide(dailyDeficit, 0, RoundingMode.HALF_UP).intValue();
-            }
+            BigDecimal pctDiff = currentBodyFatPct.subtract(targetBodyFatPct);
+            
+            // Realistic weekly BF% drop (Conservative estimates)
+            BigDecimal weeklyDropPct = switch (intensityLevel) {
+                case GRADUAL -> new BigDecimal("0.10"); // Extremely slow, ~1 year for 5%
+                case BALANCED -> new BigDecimal("0.20"); // Moderate, ~6 months for 5%
+                case AGGRESSIVE -> new BigDecimal("0.35"); // Strict, ~3.5 months for 5%
+            };
+            
+            BigDecimal weeksRequired = pctDiff.divide(weeklyDropPct, 1, RoundingMode.HALF_UP);
+            daysForFat = weeksRequired.multiply(new BigDecimal("7")).intValue();
         }
 
-        // Muscle Gain calculation
+        // Muscle Gain calculation (based on realistic weekly kg gain for naturals)
         if (muscleGoal == MuscleGoal.GAIN && currentMuscleMassKg != null && targetMuscleMassKg != null && targetMuscleMassKg.compareTo(currentMuscleMassKg) > 0) {
             BigDecimal muscleToGainKg = targetMuscleMassKg.subtract(currentMuscleMassKg);
-            BigDecimal totalCalorieSurplus = muscleToGainKg.multiply(new BigDecimal("7000"));
-            BigDecimal effectiveSurplus = dailySurplus.compareTo(BigDecimal.ZERO) > 0 ? dailySurplus : new BigDecimal("300");
-            daysForMuscle = totalCalorieSurplus.divide(effectiveSurplus, 0, RoundingMode.HALF_UP).intValue();
+            
+            // Realistic weekly muscle gain in kg (Highly conservative)
+            BigDecimal weeklyGainKg = switch (intensityLevel) {
+                case GRADUAL -> new BigDecimal("0.03"); // ~0.12kg per month (Advanced lifters)
+                case BALANCED -> new BigDecimal("0.06"); // ~0.25kg per month (Intermediates)
+                case AGGRESSIVE -> new BigDecimal("0.12"); // ~0.5kg per month (Beginner "newbie gains")
+            };
+            
+            BigDecimal weeksRequired = muscleToGainKg.divide(weeklyGainKg, 1, RoundingMode.HALF_UP);
+            daysForMuscle = weeksRequired.multiply(new BigDecimal("7")).intValue();
         }
 
         return Math.max(daysForFat, daysForMuscle);
+    }
+
+    /**
+     * Converts raw days into a rough, human-readable estimate in months.
+     */
+    public static String formatEstimatedTimeline(int days) {
+        if (days < 30) {
+            return "less than a month";
+        }
+        int months = (int) Math.round(days / 30.0);
+        if (months == 1) {
+            return "about 1 month";
+        }
+        return "about " + months + " months";
     }
 
     private static BigDecimal getActivityMultiplier(ActivityLevel level) {

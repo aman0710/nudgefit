@@ -99,7 +99,7 @@ public class OnboardingService {
             int age = Integer.parseInt(message.trim());
             user.setAge(age);
             user.setConversationState(ConversationState.ONBOARDING_GENDER);
-            return "What is your biological sex?\n1. Male\n2. Female\nReply with 1 or 2.";
+            return "What is your biological sex? 🧬\n\n1. Male 👨\n2. Female 👩\n\nReply with 1 or 2.";
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Please enter a valid age (e.g., 27).");
         }
@@ -115,7 +115,7 @@ public class OnboardingService {
             throw new IllegalArgumentException("Please reply with 1 or 2.");
         }
         user.setConversationState(ConversationState.ONBOARDING_ACTIVITY_LEVEL);
-        return "Outside of your workouts, how active is your daily lifestyle? (Think about your job and daily movement):\n1. Sedentary (Mostly sitting, e.g., desk job, driving)\n2. Moderate (Lots of standing or walking, e.g., teacher, retail)\n3. Active (Physically demanding job, e.g., construction)\nReply with 1, 2, or 3.";
+        return "Outside of your workouts, how active is your daily lifestyle? 🚶‍♂️ (Think about your job and daily movement):\n\n1. Sedentary (Mostly sitting, e.g., desk job, driving) 🪑\n2. Moderate (Lots of standing or walking, e.g., teacher, retail) 🚶\n3. Active (Physically demanding job, e.g., construction) 🏗️\n\nReply with 1, 2, or 3.";
     }
 
     private String handleActivityLevel(User user, String message) {
@@ -131,7 +131,7 @@ public class OnboardingService {
         }
         
         user.setConversationState(ConversationState.ONBOARDING_FAT_GOAL);
-        return "Awesome! What is your primary goal for body fat?\n1. Lose fat\n2. Maintain fat\n3. Gain fat\nReply with 1, 2, or 3.";
+        return "Awesome! What is your primary goal for body fat? 📉\n\n1. Lose fat 🔥\n2. Maintain fat ⚖️\n3. Gain fat 🍔\n\nReply with 1, 2, or 3.";
     }
 
     private String handleFatGoal(User user, String message) {
@@ -153,7 +153,7 @@ public class OnboardingService {
             if (user.getFatGoal() == FatGoal.MAINTAIN) {
                 user.setTargetBodyFatPct(bodyFat);
                 user.setConversationState(ConversationState.ONBOARDING_MUSCLE_GOAL);
-                return "Since you want to maintain, we will keep it at " + bodyFat + "%. What is your primary goal for muscle mass?\n1. Lose muscle\n2. Maintain muscle\n3. Gain muscle\nReply with 1, 2, or 3.";
+                return "Since you want to maintain, we will keep it at " + bodyFat + "%. What is your primary goal for muscle mass? 💪\n\n1. Lose muscle 📉\n2. Maintain muscle ⚖️\n3. Gain muscle 🚀\n\nReply with 1, 2, or 3.";
             } else {
                 user.setConversationState(ConversationState.ONBOARDING_TARGET_BODY_FAT);
                 return "And what is your target body fat percentage?";
@@ -176,7 +176,7 @@ public class OnboardingService {
             
             user.setTargetBodyFatPct(targetBodyFat);
             user.setConversationState(ConversationState.ONBOARDING_MUSCLE_GOAL);
-            return "Great. What is your primary goal for muscle mass?\n1. Lose muscle\n2. Maintain muscle\n3. Gain muscle\nReply with 1, 2, or 3.";
+            return "Great. What is your primary goal for muscle mass? 💪\n\n1. Lose muscle 📉\n2. Maintain muscle ⚖️\n3. Gain muscle 🚀\n\nReply with 1, 2, or 3.";
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Please enter a valid number for target body fat percentage.");
         }
@@ -201,7 +201,7 @@ public class OnboardingService {
             if (user.getMuscleGoal() == MuscleGoal.MAINTAIN) {
                 user.setTargetMuscleMassKg(muscleMass);
                 user.setConversationState(ConversationState.ONBOARDING_INTENSITY_LEVEL);
-                return "Since you want to maintain, we will target " + muscleMass + "kg. Finally, what pace of change are you aiming for?\n1. Gradual (Slower, highly sustainable)\n2. Balanced (Steady pace, moderate effort)\n3. Aggressive (Fast pace, requires strict discipline)\nReply with 1, 2, or 3.";
+                return "Since you want to maintain, we will target " + muscleMass + "kg. Finally, what pace of change are you aiming for? ⏱️\n\n1. Gradual (Slower, highly sustainable) 🐢\n2. Balanced (Steady pace, moderate effort) 🚶\n3. Aggressive (Fast pace, requires strict discipline) 🚀\n\nReply with 1, 2, or 3.";
             } else {
                 user.setConversationState(ConversationState.ONBOARDING_TARGET_MUSCLE_MASS);
                 return "And what is your target muscle mass in kg?";
@@ -224,7 +224,7 @@ public class OnboardingService {
             
             user.setTargetMuscleMassKg(targetMuscleMass);
             user.setConversationState(ConversationState.ONBOARDING_INTENSITY_LEVEL);
-            return "Finally, what pace of change are you aiming for?\n1. Gradual (Slower, highly sustainable)\n2. Balanced (Steady pace, moderate effort)\n3. Aggressive (Fast pace, requires strict discipline)\nReply with 1, 2, or 3.";
+            return "Finally, what pace of change are you aiming for? ⏱️\n\n1. Gradual (Slower, highly sustainable) 🐢\n2. Balanced (Steady pace, moderate effort) 🚶\n3. Aggressive (Fast pace, requires strict discipline) 🚀\n\nReply with 1, 2, or 3.";
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Please enter a valid number for target muscle mass in kg.");
         }
@@ -268,7 +268,7 @@ public class OnboardingService {
         vars.put("protein_target", proteinTarget.toString());
         vars.put("carbs_target", carbsTarget.toString());
         vars.put("fat_target", fatTarget.toString());
-        vars.put("estimated_days", String.valueOf(estimatedDays));
+        vars.put("estimated_timeline", MacroCalculator.formatEstimatedTimeline(estimatedDays));
         vars.put("fat_goal", user.getFatGoal().name());
         vars.put("muscle_goal", user.getMuscleGoal().name());
         vars.put("intensity_level", user.getIntensityLevel().name());

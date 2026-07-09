@@ -12,7 +12,7 @@ Calculated Plan:
 - Carbs: {carbs_target}g
 - Fats: {fat_target}g
 - Recommended Workout: {workout_recommendation}
-- Estimated Timeline: {estimated_days} days
+- Estimated Timeline: {estimated_timeline}
 
 Instructions:
 1. Greet them enthusiastically by name.
