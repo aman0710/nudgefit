@@ -162,14 +162,14 @@ public class GeminiAiService {
                     .bodyValue(requestBody)
                     .retrieve()
                     .bodyToMono(String.class)
-                    .retryWhen(Retry.fixedDelay(2, Duration.ofSeconds(5))
+                    .retryWhen(Retry.fixedDelay(2, Duration.ofMillis(4010))
                             .filter(t -> {
                                 if (t instanceof WebClientResponseException ex) {
                                     if (ex.getStatusCode().value() == 429 || ex.getStatusCode().is5xxServerError()) {
-                                        log.warn("Gemini API error ({}), waiting 5s to let quota reset...",
+                                        log.warn("Gemini API error ({}), waiting 4.01s to let quota reset...",
                                                 ex.getStatusCode());
                                         synchronized (this) {
-                                            lastCallTime = System.currentTimeMillis() + 5000;
+                                            lastCallTime = System.currentTimeMillis() + 4010;
                                         }
                                         return true;
                                     }
