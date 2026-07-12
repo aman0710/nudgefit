@@ -28,20 +28,22 @@ public class FoodLoggingService {
     private final PromptBuilder promptBuilder;
     private final DailyLogRepository dailyLogRepository;
     private final FoodEntryRepository foodEntryRepository;
-    private final GoalEngineService goalEngineService;
     private final CoachResponseService coachResponseService;
 
     @Transactional
-    public String logFood(User user, String userMessage) {
+    public String logFood(User user, String userMessage, MealType mealType) {
+        String mealTypeStr = mealType != null ? mealType.name() : "SNACK";
+
         String prompt = promptBuilder.build("food-parsing.txt", Map.of(
                 "user_message", userMessage,
-                "current_weight", String.valueOf(user.getCurrentWeightKg())
+                "current_weight", String.valueOf(user.getCurrentWeightKg()),
+                "meal_type", mealTypeStr
         ));
 
         ParsedFoodResponse response = geminiAiService.call(prompt, ParsedFoodResponse.class);
 
         if (response == null) {
-            return "Sorry, I couldn't quite understand that meal. Can you try rephrasing?";
+            return "Sorry, I couldn't quite understand that meal. Can you try rephrasing? 🤔";
         }
 
         DailyLog dailyLog = dailyLogRepository.findByUserIdAndLogDate(user.getId(), LocalDate.now())
@@ -55,14 +57,13 @@ public class FoodLoggingService {
                 .proteinG(response.total_protein_g())
                 .carbsG(response.total_carbs_g())
                 .fatG(response.total_fat_g())
-                .mealType(response.meal_type() != null ? response.meal_type() : MealType.SNACK)
+                .mealType(response.meal_type() != null ? response.meal_type() : (mealType != null ? mealType : MealType.SNACK))
                 .loggedAt(LocalDateTime.now())
-                // .parsedItems(serialize items to JSON if needed)
                 .build();
 
         foodEntryRepository.save(entry);
 
-        // Update DailyLog
+        // Update DailyLog totals
         dailyLog.setTotalCaloriesConsumed(dailyLog.getTotalCaloriesConsumed().add(response.total_calories() != null ? response.total_calories() : BigDecimal.ZERO));
         dailyLog.setTotalProteinConsumed(dailyLog.getTotalProteinConsumed().add(response.total_protein_g() != null ? response.total_protein_g() : BigDecimal.ZERO));
         dailyLog.setTotalCarbsConsumed(dailyLog.getTotalCarbsConsumed().add(response.total_carbs_g() != null ? response.total_carbs_g() : BigDecimal.ZERO));
@@ -70,9 +71,7 @@ public class FoodLoggingService {
         dailyLog.setNetCalories(dailyLog.getTotalCaloriesConsumed().subtract(dailyLog.getTotalCaloriesBurned()));
         dailyLogRepository.save(dailyLog);
 
-        goalEngineService.recalculateGoalAndSnapshot(user, dailyLog);
-
-        return coachResponseService.generateCoachingResponse(user, userMessage, dailyLog, entry);
+        return coachResponseService.generateCoachingResponse(user, userMessage, dailyLog, entry, null);
     }
 
     private DailyLog createNewDailyLog(User user) {

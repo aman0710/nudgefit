@@ -12,4 +12,6 @@ import java.util.UUID;
 public interface DailyLogRepository extends JpaRepository<DailyLog, UUID> {
 
     Optional<DailyLog> findByUserIdAndLogDate(UUID userId, LocalDate date);
+
+    int countByUserIdAndLogDateBetween(UUID userId, LocalDate startDate, LocalDate endDate);
 }

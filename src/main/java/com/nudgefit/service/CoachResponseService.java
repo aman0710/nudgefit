@@ -4,17 +4,22 @@ import com.nudgefit.ai.GeminiAiService;
 import com.nudgefit.ai.PromptBuilder;
 import com.nudgefit.model.entity.DailyLog;
 import com.nudgefit.model.entity.User;
+import com.nudgefit.repository.DailyLogRepository;
 import com.nudgefit.util.MacroCalculator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
 import com.nudgefit.model.entity.FoodEntry;
+import com.nudgefit.model.entity.WorkoutEntry;
 
 @Service
 @RequiredArgsConstructor
@@ -24,8 +29,9 @@ public class CoachResponseService {
     private final GeminiAiService geminiAiService;
     private final PromptBuilder promptBuilder;
     private final ConversationContextService contextService;
+    private final DailyLogRepository dailyLogRepository;
 
-    public String generateCoachingResponse(User user, String userMessage, DailyLog dailyLog, FoodEntry currentFoodEntry) {
+    public String generateCoachingResponse(User user, String userMessage, DailyLog dailyLog, FoodEntry currentFoodEntry, WorkoutEntry currentWorkoutEntry) {
         // Fetch context
         List<String> recentMessages = contextService.getRecentMessages(user.getPhoneNumber(), 5);
         String conversationHistory = String.join("\n", recentMessages);
@@ -89,7 +95,21 @@ public class CoachResponseService {
             variables.put("current_meal_macros", "N/A");
         }
 
-        variables.put("on_track_days", "5"); // Mocked for now
+        if (currentWorkoutEntry != null) {
+            String workoutStats = String.format("Burned %s calories during %s",
+                    currentWorkoutEntry.getCaloriesBurned(),
+                    currentWorkoutEntry.getWorkoutType());
+            variables.put("current_workout_stats", workoutStats);
+        } else {
+            variables.put("current_workout_stats", "N/A");
+        }
+
+        // Calculate on track days this week
+        LocalDate today = LocalDate.now();
+        LocalDate startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        int onTrackDays = dailyLogRepository.countByUserIdAndLogDateBetween(user.getId(), startOfWeek, today);
+        variables.put("on_track_days", String.valueOf(onTrackDays));
+        
         variables.put("user_message", userMessage);
         variables.put("conversation_history", conversationHistory);
 
@@ -103,7 +123,7 @@ public class CoachResponseService {
             return "You're doing great! Keep hitting those macros! 💪";
         } catch (Exception e) {
             log.error("Failed to generate coaching response for {}: {}", user.getPhoneNumber(), e.getMessage());
-            return "You're doing great! Keep it up! 💪";
+            return "Debug Error: " + e.getMessage();
         }
     }
 }

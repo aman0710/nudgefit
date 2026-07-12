@@ -28,14 +28,13 @@ public class WorkoutLoggingService {
     private final PromptBuilder promptBuilder;
     private final DailyLogRepository dailyLogRepository;
     private final WorkoutEntryRepository workoutEntryRepository;
-    private final GoalEngineService goalEngineService;
     private final CoachResponseService coachResponseService;
 
     @Transactional
     public String logWorkout(User user, String userMessage) {
         String prompt = promptBuilder.build("workout-parsing.txt", Map.of(
                 "user_message", userMessage,
-                "current_weight", String.valueOf(user.getCurrentWeightKg())
+                "user_weight_kg", String.valueOf(user.getCurrentWeightKg())
         ));
 
         ParsedWorkoutResponse response = geminiAiService.call(prompt, ParsedWorkoutResponse.class);
@@ -65,9 +64,7 @@ public class WorkoutLoggingService {
         dailyLog.setNetCalories(dailyLog.getTotalCaloriesConsumed().subtract(dailyLog.getTotalCaloriesBurned()));
         dailyLogRepository.save(dailyLog);
 
-        goalEngineService.recalculateGoalAndSnapshot(user, dailyLog);
-
-        return coachResponseService.generateCoachingResponse(user, userMessage, dailyLog, null);
+        return coachResponseService.generateCoachingResponse(user, userMessage, dailyLog, null, entry);
     }
 
     private DailyLog createNewDailyLog(User user) {

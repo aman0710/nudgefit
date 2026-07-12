@@ -1,8 +1,10 @@
 package com.nudgefit.service;
 
 import com.nudgefit.model.dto.MessageReceivedEvent;
+import com.nudgefit.model.entity.DailyLog;
 import com.nudgefit.model.entity.User;
 import com.nudgefit.model.enums.ConversationState;
+import com.nudgefit.repository.DailyLogRepository;
 import com.nudgefit.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +12,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Service
@@ -24,7 +27,7 @@ public class MessageProcessorService {
     private final FoodLoggingService foodLoggingService;
     private final WorkoutLoggingService workoutLoggingService;
     private final CoachResponseService coachResponseService;
-    private final GoalEngineService goalEngineService;
+    private final DailyLogRepository dailyLogRepository;
     private final WhatsAppMessagingService messagingService;
 
     @Async
@@ -60,11 +63,14 @@ public class MessageProcessorService {
                 // Route to intent classification
                 com.nudgefit.model.dto.IntentClassificationResponse classification = intentClassifierService.classifyIntent(phoneNumber, messageBody);
                 
+                // Fetch today's DailyLog for progress check and fallback intents
+                DailyLog dailyLog = dailyLogRepository.findByUserIdAndLogDate(user.getId(), LocalDate.now()).orElse(null);
+
                 responseText = switch (classification.intent()) {
-                    case FOOD_LOG -> foodLoggingService.logFood(user, messageBody);
+                    case FOOD_LOG -> foodLoggingService.logFood(user, messageBody, classification.meal_type());
                     case WORKOUT_LOG -> workoutLoggingService.logWorkout(user, messageBody);
-                    case PROGRESS_CHECK -> coachResponseService.generateCoachingResponse(user, messageBody, null, null); // Provide stats
-                    default -> coachResponseService.generateCoachingResponse(user, messageBody, null, null); // General chat
+                    case PROGRESS_CHECK -> coachResponseService.generateCoachingResponse(user, messageBody, dailyLog, null, null); // Provide stats
+                    default -> coachResponseService.generateCoachingResponse(user, messageBody, dailyLog, null, null); // General chat
                 };
             }
 
@@ -79,7 +85,11 @@ public class MessageProcessorService {
             messagingService.sendMessage(phoneNumber, e.getMessage());
         } catch (Exception e) {
             log.error("Error processing message for {}: {}", phoneNumber, e.getMessage(), e);
-            messagingService.sendMessage(phoneNumber, "I'm having a bit of trouble right now. Can you try again in a minute? 🙏");
+            if (e.getMessage() != null && (e.getMessage().contains("429") || e.getMessage().contains("rate limit"))) {
+                messagingService.sendMessage(phoneNumber, "Whoa, I'm getting a lot of messages right now and hit my API limit! 🏃💨 Please wait a minute and try again. ⏳");
+            } else {
+                messagingService.sendMessage(phoneNumber, "I'm having a bit of trouble right now. Can you try again in a minute? 🙏");
+            }
         }
     }
 }

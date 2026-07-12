@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -24,9 +26,12 @@ public class IntentClassifierService {
         List<String> recentMessages = contextService.getRecentMessages(phoneNumber, 5);
         String conversationHistory = String.join("\n", recentMessages);
 
+        String currentTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+
         String prompt = promptBuilder.build("intent-classification.txt", Map.of(
                 "user_message", userMessage,
-                "conversation_history", conversationHistory
+                "conversation_history", conversationHistory,
+                "current_time", currentTime
         ));
 
         try {
@@ -34,11 +39,10 @@ public class IntentClassifierService {
             if (response != null) {
                 return response;
             }
+            throw new RuntimeException("Gemini API returned null for intent classification");
         } catch (Exception e) {
             log.error("Failed to classify intent for {}: {}", phoneNumber, e.getMessage());
+            throw new RuntimeException("Intent classification failed: " + e.getMessage(), e);
         }
-
-        // Fallback
-        return new IntentClassificationResponse(com.nudgefit.model.enums.Intent.GENERAL_CHAT, 0.0, null);
     }
 }

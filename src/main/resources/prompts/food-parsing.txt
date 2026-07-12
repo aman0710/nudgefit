@@ -19,3 +19,5 @@ Respond with a JSON object containing:
 - "total_carbs_g": sum of all carbs (number)
 - "total_fat_g": sum of all fat (number)
 - "meal_type": "{meal_type}"
+
+IMPORTANT: Respond with ONLY the JSON object. Keep it compact with no extra whitespace or explanations. Do not wrap in markdown code blocks.

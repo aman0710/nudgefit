@@ -39,7 +39,7 @@ public class GeminiAiService {
     private synchronized void enforceRateLimit() {
         long now = System.currentTimeMillis();
         long elapsed = now - lastCallTime;
-        long requiredDelay = 4000; // 4000ms = 1 request per 4 seconds
+        long requiredDelay = 4500; // 4500ms = safely under 15 requests per minute
 
         if (elapsed < requiredDelay) {
             try {
@@ -59,19 +59,52 @@ public class GeminiAiService {
      * @return Parsed response object, or null if the API call fails
      */
     public <T> T call(String prompt, Class<T> targetClass) {
-        enforceRateLimit();
-        try {
-            String responseJson = executeGeminiCall(prompt, true);
-            if (responseJson == null) return null;
-
-            String text = extractTextFromResponse(responseJson);
-            return objectMapper.readValue(text, targetClass);
-
-        } catch (Exception e) {
-            log.error("Gemini API call failed: {}", e.getMessage());
-            return null;
+        int maxAttempts = 2;
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            enforceRateLimit();
+            try {
+                String responseJson = executeGeminiCall(prompt, true);
+                if (responseJson == null || responseJson.isBlank()) {
+                    log.warn("Gemini API returned null or empty response; returning null for {}", targetClass.getSimpleName());
+                    return null;
+                }
+                // Extract text and ensure we have a complete JSON object
+                String text = extractTextFromResponse(responseJson);
+                log.debug("Gemini raw text for {}: {}", targetClass.getSimpleName(), text);
+                String json = text.trim();
+                if (!json.startsWith("{")) {
+                    int startIdx = json.indexOf('{');
+                    int endIdx = json.lastIndexOf('}');
+                    if (startIdx != -1 && endIdx != -1 && endIdx > startIdx) {
+                        json = json.substring(startIdx, endIdx + 1);
+                    } else {
+                        log.warn("Unable to locate JSON object in Gemini response; returning null");
+                        return null;
+                    }
+                }
+                try {
+                    return objectMapper.readValue(json, targetClass);
+                } catch (com.fasterxml.jackson.core.io.JsonEOFException eofEx) {
+                    // Truncated JSON – retry if we have attempts left
+                    log.warn("Gemini returned truncated JSON (attempt {}/{}): {}", attempt, maxAttempts, eofEx.getMessage());
+                    if (attempt < maxAttempts) {
+                        log.info("Retrying Gemini call for {}...", targetClass.getSimpleName());
+                        continue;
+                    }
+                    log.error("Gemini returned truncated JSON after {} attempts; returning null", maxAttempts);
+                    return null;
+                } catch (Exception jsonEx) {
+                    log.error("Failed to parse Gemini JSON response: {}", jsonEx.getMessage());
+                    return null;
+                }
+            } catch (Exception e) {
+                log.error("Gemini API call failed: {}", e.getMessage());
+                return null;
+            }
         }
+        return null;
     }
+
 
     /**
      * Sends a prompt to Gemini and returns the raw text response (no JSON parsing).
@@ -81,13 +114,13 @@ public class GeminiAiService {
         enforceRateLimit();
         try {
             String responseJson = executeGeminiCall(prompt, false);
-            if (responseJson == null) return null;
+            if (responseJson == null) throw new RuntimeException("executeGeminiCall returned null (likely rate limit or 500)");
 
             return extractTextFromResponse(responseJson);
 
         } catch (Exception e) {
             log.error("Gemini API call failed: {}", e.getMessage());
-            return null;
+            throw new RuntimeException("Gemini API call failed: " + e.getMessage(), e);
         }
     }
 
@@ -104,46 +137,56 @@ public class GeminiAiService {
                 geminiConfig.getApiKey()
         );
 
-        Map<String, Object> generationConfig = jsonMode
-                ? Map.of("responseMimeType", "application/json", "temperature", 0.7)
-                : Map.of("temperature", 0.7);
+        // Disable thinking to prevent thinking tokens from consuming output budget
+        Map<String, Object> generationConfig = new java.util.HashMap<>();
+        generationConfig.put("temperature", 0.7);
+        generationConfig.put("maxOutputTokens", 8192);
+        if (jsonMode) {
+            generationConfig.put("responseMimeType", "application/json");
+        }
 
-        Map<String, Object> requestBody = Map.of(
-                "contents", List.of(
-                        Map.of("parts", List.of(
-                                Map.of("text", prompt)
-                        ))
-                ),
-                "generationConfig", generationConfig
-        );
+        Map<String, Object> requestBody = new java.util.HashMap<>();
+        requestBody.put("contents", List.of(
+                Map.of("parts", List.of(
+                        Map.of("text", prompt)
+                ))
+        ));
+        requestBody.put("generationConfig", generationConfig);
+
+        String maskedKey = geminiConfig.getApiKey() != null && geminiConfig.getApiKey().length() > 4 
+            ? "..." + geminiConfig.getApiKey().substring(geminiConfig.getApiKey().length() - 4) 
+            : "unknown";
+        log.debug("Executing Gemini POST request to {} with API Key ending in {}", geminiConfig.getModel(), maskedKey);
 
         try {
-            return geminiWebClient.post()
+            String result = geminiWebClient.post()
                     .uri(endpoint)
                     .header("Content-Type", "application/json")
                     .bodyValue(requestBody)
                     .retrieve()
                     .bodyToMono(String.class)
-                    .retryWhen(Retry.fixedDelay(1, Duration.ofSeconds(5))
+                    .retryWhen(Retry.fixedDelay(2, Duration.ofSeconds(15))
                             .filter(t -> {
                                 if (t instanceof WebClientResponseException ex) {
-                                    if (ex.getStatusCode().value() == 429) {
-                                        log.warn("Gemini API rate limited (429), will retry once in 5s...");
-                                        return true;
-                                    }
-                                    if (ex.getStatusCode().is5xxServerError()) {
-                                        log.warn("Gemini API server error ({}), will retry once in 5s...", ex.getStatusCode());
+                                    if (ex.getStatusCode().value() == 429 || ex.getStatusCode().is5xxServerError()) {
+                                        log.warn("Gemini API error ({}), waiting 15s to let quota reset...", ex.getStatusCode());
+                                        synchronized (this) {
+                                            lastCallTime = System.currentTimeMillis() + 15000;
+                                        }
                                         return true;
                                     }
                                 }
                                 return false;
                             }))
                     .block();
+            log.debug("Gemini raw API response (first 500 chars): {}", 
+                    result != null ? result.substring(0, Math.min(result.length(), 500)) : "null");
+            return result;
         } catch (WebClientResponseException ex) {
-            log.error("Gemini API failed after retry: {} - {}", ex.getStatusCode(), ex.getResponseBodyAsString());
+            log.error("Gemini API HTTP error: {} - {}", ex.getStatusCode(), ex.getResponseBodyAsString());
             return null;
         } catch (Exception ex) {
-            log.error("Gemini API request failed: {}", ex.getMessage());
+            log.error("Gemini API request failed: {}", ex.getMessage(), ex);
             return null;
         }
     }
@@ -153,10 +196,30 @@ public class GeminiAiService {
      * Path: candidates[0].content.parts[0].text
      */
     private String extractTextFromResponse(String responseJson) throws Exception {
+        // Parse the whole response safely
         Map<String, Object> responseMap = objectMapper.readValue(responseJson, Map.class);
+        // Navigate to candidates list safely
         List<Map<String, Object>> candidates = (List<Map<String, Object>>) responseMap.get("candidates");
+        if (candidates == null || candidates.isEmpty()) {
+            throw new IllegalStateException("No candidates found in Gemini response");
+        }
         Map<String, Object> content = (Map<String, Object>) candidates.get(0).get("content");
+        if (content == null) {
+            throw new IllegalStateException("No content found in Gemini candidate");
+        }
         List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
-        return (String) parts.get(0).get("text");
+        if (parts == null || parts.isEmpty()) {
+            throw new IllegalStateException("No parts found in Gemini content");
+        }
+        // Find the first part that contains a 'text' field
+        for (Map<String, Object> part : parts) {
+            if (part.containsKey("text")) {
+                Object txt = part.get("text");
+                return txt != null ? txt.toString() : "";
+            }
+        }
+        // If no text field present, return empty string
+        return "";
     }
+
 }
