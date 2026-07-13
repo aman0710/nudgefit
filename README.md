@@ -54,7 +54,7 @@ NudgeFit is built on a modern Java Spring Boot backend, utilizing PostgreSQL, Re
 - **PostgreSQL** (Database for Users, Daily Logs, and Goal Snapshots)
 - **Redis** (Fast caching for conversation state and recent message history)
 - **Twilio API** (WhatsApp Business API integration)
-- **Google Gemini 3.5 Flash** (AI Intent Classification and NLP Parsing, with robust JSON sanitization and custom proactive 429 rate-limiting strategies)
+- **Google Gemini 3.1 Flash Lite** (AI Intent Classification and NLP Parsing, with robust JSON sanitization and custom proactive 429 rate-limiting strategies)
 
 ### Architecture Workflow
 1. **Twilio Webhook**: (`WhatsAppWebhookController`) Receives the incoming WhatsApp message.
