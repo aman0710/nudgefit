@@ -37,7 +37,7 @@ At any point, you can ask NudgeFit how you are doing.
 > 
 > **NudgeFit:** *Reviews your daily logs and provides a personalized summary, letting you know if you need to eat a protein-heavy dinner to hit your goals.*
 
-### 5. Automated Nudges ⏰ *(Coming Soon)*
+### 5. Automated Nudges ⏰
 NudgeFit keeps you accountable!
 - **Morning Check-ins**: Sends your daily goals to start your day right.
 - **Evening Summaries**: Tells you how you did against your macro targets.
@@ -50,21 +50,21 @@ NudgeFit keeps you accountable!
 NudgeFit is built on a modern Java Spring Boot backend, utilizing PostgreSQL, Redis, Twilio, and Google Gemini AI.
 
 ### Tech Stack
-- **Java 21** & **Spring Boot 3.2**
+- **Java 21** & **Spring Boot 3.3.5**
 - **PostgreSQL** (Database for Users, Daily Logs, and Goal Snapshots)
 - **Redis** (Fast caching for conversation state and recent message history)
-- **Flyway** (Database schema migrations)
 - **Twilio API** (WhatsApp Business API integration)
-- **Google Gemini 2.0 Flash** (AI Intent Classification and NLP Parsing)
+- **Google Gemini 3.5 Flash** (AI Intent Classification and NLP Parsing, with robust JSON sanitization and custom proactive 429 rate-limiting strategies)
 
 ### Architecture Workflow
-1. **Twilio Webhook**: Receives the incoming WhatsApp message.
+1. **Twilio Webhook**: (`WhatsAppWebhookController`) Receives the incoming WhatsApp message.
 2. **MessageProcessorService**: Identifies the user's state. If they are new, it routes them to the `OnboardingService`.
 3. **IntentClassifierService**: If the user is active, Gemini analyzes the message and categorizes it (`FOOD_LOG`, `WORKOUT_LOG`, `PROGRESS_CHECK`, etc.).
-4. **Logging Services**: Gemini extracts the exact macros/calories and saves them to the PostgreSQL database.
-5. **GoalEngineService**: Recalculates the user's estimated timeline to reach their body composition goals based on their daily compliance.
-6. **CoachResponseService**: Gemini crafts a personalized, contextual reply which is sent back via Twilio.
-7. **Health/Uptime**: A lightweight `/health` endpoint keeps the service awake on free-tier hosting platforms (like Render) via services like UptimeRobot.
+4. **Logging Services**: (`FoodLoggingService` & `WorkoutLoggingService`) Gemini extracts the exact macros/calories and saves them to the PostgreSQL database.
+5. **ConversationContextService**: Maintains the user's recent message history in Redis to give the AI memory of the ongoing chat.
+6. **CoachResponseService**: Gemini crafts a personalized, contextual reply.
+7. **WhatsAppMessagingService**: Dispatches the final coaching response back to the user via the Twilio API.
+8. **Health/Uptime**: A lightweight `/health` endpoint keeps the service awake on free-tier hosting platforms (like Render) via services like UptimeRobot.
 
 ### Local Installation
 
@@ -79,7 +79,6 @@ NudgeFit is built on a modern Java Spring Boot backend, utilizing PostgreSQL, Re
    ```bash
    cp .env.example .env
    ```
-   *(You will need API keys for Twilio, Gemini, a Postgres connection URL, and a Redis connection URL).*
 
 3. **Run the Application:**
    Ensure you have JDK 21 installed.
@@ -89,6 +88,32 @@ NudgeFit is built on a modern Java Spring Boot backend, utilizing PostgreSQL, Re
 
 4. **Connect Twilio (Local Testing):**
    - Run `ngrok http 8080` in a separate terminal.
-   - Copy your public ngrok URL.
    - Go to the **Twilio Console** -> **Messaging** -> **Try it out** -> **Send a WhatsApp message**.
-   - Under "Sandbox settings", paste your ngrok URL appended with `/api/v1/webhook` (e.g., `https://<your-id>.ngrok.io/api/v1/webhook`) into the "When a message comes in" field.
+   - Under "Sandbox settings", paste your ngrok URL appended with `/api/v1/webhook/whatsapp` into the "When a message comes in" field.
+
+---
+
+## ☁️ Cloud Deployment (Render)
+
+NudgeFit is fully configured for 1-click cloud deployment via **Render**.
+
+1. Go to your [Render Dashboard](https://dashboard.render.com/).
+2. Click **New +** > **Blueprint**.
+3. Connect your GitHub repository. Render will read the `render.yaml` file automatically.
+4. Paste in your environment variables when prompted.
+5. Click **Apply**.
+6. Once deployed, update your Twilio Sandbox webhook to your new live URL: `https://<your-render-app>.onrender.com/api/v1/webhook/whatsapp`.
+
+### ⏱️ Keeping the Server Awake (UptimeRobot)
+Render's free tier spins down servers after 15 minutes of inactivity. Since Spring Boot has a slow cold-start, a sleeping server will cause Twilio webhooks to time out. 
+To prevent this, create a free ping monitor on [UptimeRobot](https://uptimerobot.com/) that hits the built-in health endpoint (`https://<your-render-app>.onrender.com/health`) every 5 minutes.
+
+---
+
+## 💬 Twilio Sandbox vs. Production
+
+**Development & Demos (Twilio Sandbox)**
+For testing and interviews, you use the Twilio Sandbox. Users must send a code like `join <your-word>` to connect their WhatsApp to your bot. This connection expires every 72 hours (or 24 hours of inactivity). If it expires, simply resend the join code. **Your NudgeFit database data is never lost when a session expires.**
+
+**Production (WhatsApp Business API)**
+To remove the `join` code requirement entirely, you must purchase a phone number through Twilio and submit it for Meta's WhatsApp Business approval. Once approved, users can simply message the number directly.
