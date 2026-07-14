@@ -20,7 +20,7 @@ public class MorningCheckInJob {
     private final WhatsAppMessagingService messagingService;
 
     // Runs every day at 8:00 AM server time
-    @Scheduled(cron = "0 0 8 * * *")
+    @Scheduled(cron = "0 0 8 * * *", zone = "Asia/Kolkata")
     public void sendMorningCheckIn() {
         log.info("Starting Morning Check-in job...");
         List<User> activeUsers = userRepository.findAll().stream()

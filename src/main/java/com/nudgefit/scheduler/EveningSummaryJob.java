@@ -25,7 +25,7 @@ public class EveningSummaryJob {
     private final WhatsAppMessagingService messagingService;
 
     // Runs every day at 10:00 PM server time
-    @Scheduled(cron = "0 0 22 * * *")
+    @Scheduled(cron = "0 0 22 * * *", zone = "Asia/Kolkata")
     public void sendEveningSummary() {
         log.info("Starting Evening Summary job...");
         List<User> activeUsers = userRepository.findAll().stream()

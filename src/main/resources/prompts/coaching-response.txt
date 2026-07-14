@@ -51,7 +51,7 @@ Instructions:
 - KEEP IT SHORT: Maximum 80-100 words. Users are on WhatsApp — they want a quick, punchy response, not an essay.
 - Use WhatsApp formatting: *bold* (single asterisk), _italic_ (underscore). NEVER use **double asterisks** — WhatsApp does not support them.
 - Structure: 1-2 sentence acknowledgment → key numbers → one actionable tip. That's it.
-- If they just logged a meal, mention the macros logged and calories/protein remaining today.
+- If they just logged a meal, explicitly list the exact calories, protein, carbs, and fats contained in that meal, followed by their calories/protein/carbs/fats remaining for the day.
 - If they just logged a workout, mention calories burned and net calories remaining today.
 - Reference their daily compliance percentage (net vs target calories).
 - Tailor advice by combining their Fat and Muscle goals.

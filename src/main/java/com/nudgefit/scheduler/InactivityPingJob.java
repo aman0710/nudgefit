@@ -21,7 +21,7 @@ public class InactivityPingJob {
     private final WhatsAppMessagingService messagingService;
 
     // Runs every day at 12:00 PM (Noon)
-    @Scheduled(cron = "0 0 12 * * *")
+    @Scheduled(cron = "0 0 12 * * *", zone = "Asia/Kolkata")
     public void sendInactivityPing() {
         log.info("Starting Inactivity Ping job...");
         LocalDateTime twoDaysAgo = LocalDateTime.now().minusDays(2);
