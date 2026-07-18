@@ -66,7 +66,7 @@ public class ConversationContextService {
             Map<String, String> message = Map.of(
                     "role", role,
                     "content", content,
-                    "timestamp", java.time.Instant.now().toString()
+                    "timestamp", java.time.LocalDateTime.now().toString()
             );
             String json = objectMapper.writeValueAsString(message);
             redisTemplate.opsForList().leftPush(key, json);
